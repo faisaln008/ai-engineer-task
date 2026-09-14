@@ -1,0 +1,23 @@
+{
+  "name": "ai-engineer-case",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "case": "tsx src/run.ts",
+    "eval": "tsx src/run.ts",
+    "baseline": "tsx src/baseline.ts",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@ai-sdk/anthropic": "^2.0.0",
+    "@ai-sdk/openai": "^2.0.0",
+    "ai": "^5.0.0",
+    "dotenv": "^16.4.5",
+    "zod": "^3.25.0"
+  },
+  "devDependencies": {
+    "@types/node": "^26.2.0",
+    "tsx": "^4.19.0",
+    "typescript": "^5.6.0"
+  }
+}

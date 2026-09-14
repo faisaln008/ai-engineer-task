@@ -1,0 +1,53 @@
+> tsx src/run.ts
+
+Running 15 cases × 1 repeat(s), policy layer ON, concurrency 5
+
+  c01  ✓  category ✓   priority ✓   humanReview ✓  impact=none
+  c02  ✓  category ✓   priority ✓   humanReview ✓  impact=none
+  c03  ✓  category ✓   priority ✓   humanReview ✓  impact=none
+  c04  ✓  category ✓   priority ✓   humanReview ✓  impact=stopped
+  c05  ✓  category ✓   priority ✓   humanReview ✓  impact=safety
+  c06  ✓  category ✓   priority ✓   humanReview ✓  impact=stopped
+  c07  ✓  category ✓   priority ✓   humanReview ✓  impact=degraded
+  c08  ✓  category ✓   priority ✓   humanReview ✓  impact=none
+  c09  ✓  category ✓   priority ✓   humanReview ✓  impact=none
+  c10  ✓  category ✓   priority ✓   humanReview ✓  impact=stopped
+  c11  ✓  category ✓   priority ✓   humanReview ✓  impact=degraded
+  c12  ✓  category ✓   priority ✓   humanReview ✓  impact=none
+  c13  ✓  category ✓   priority ✓   humanReview ✓  impact=none
+  c14  ✓  category ✓   priority ✓   humanReview ✓  impact=safety
+  c15  ✓  category ✓   priority ✓   humanReview ✓  impact=none
+
+── Decision quality ──────────────────────────────────
+  exact match (all 3 fields)   15/15  100%
+  per field                    category 100%   priority 100%   humanReview 100%
+
+── Escalation (the expensive axis) ───────────────────
+  MISSED URGENT                0   (customer waits; cost 10 each)
+  false alarms                 0   (on-call woken for nothing)
+  urgent recall / precision    100% / 100%
+
+── Human review (the automation-value axis) ──────────
+  review rate                  20%   (share of all mail sent to a human)
+  missed / unnecessary         0 / 0
+  review recall / precision    100% / 100%
+
+── Routing ───────────────────────────────────────────
+  wrong category               0
+
+── Health ────────────────────────────────────────────
+  api errors                   0
+  unstable across repeats      none
+  latency p50 / max            2173ms / 2990ms
+
+  RISK SCORE (lower better)    0
+
+
+── vs baseline "evals/baseline.json" ───────────────────────────
+  exact match                  6 → 15  +9 ✅
+  MISSED URGENT                5 → 0  -5 ✅
+  false alarms                 1 → 0  -1 ✅
+  wrong category               2 → 0  -2 ✅
+  review rate                  0% → 20%
+  RISK SCORE                   63 → 0  -63 ✅
+

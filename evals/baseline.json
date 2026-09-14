@@ -1,0 +1,393 @@
+{
+  "tag": "baseline",
+  "createdAt": "2026-09-14T07:47:23.987Z",
+  "note": "Original system (old prompt + EXPLICIT_URGENCY override), transcribed from evals/baseline-original-harness.txt",
+  "options": {
+    "repeats": 1,
+    "policy": false
+  },
+  "metrics": {
+    "cases": 15,
+    "scored": 15,
+    "errors": 0,
+    "exactMatch": 6,
+    "exactMatchRate": 0.4,
+    "fieldAccuracy": {
+      "category": 0.8666666666666667,
+      "priority": 0.6,
+      "humanReview": 0.8
+    },
+    "missedUrgent": 5,
+    "falseAlarm": 1,
+    "urgentRecall": 0.16666666666666666,
+    "urgentPrecision": 0.5,
+    "missedReview": 3,
+    "extraReview": 0,
+    "reviewRate": 0,
+    "reviewRecall": 0,
+    "reviewPrecision": null,
+    "wrongCategory": 2,
+    "categoryConfusion": {
+      "technical": {
+        "technical": 7,
+        "billing": 0,
+        "delivery": 0,
+        "other": 0
+      },
+      "billing": {
+        "technical": 0,
+        "billing": 3,
+        "delivery": 0,
+        "other": 0
+      },
+      "delivery": {
+        "technical": 0,
+        "billing": 0,
+        "delivery": 3,
+        "other": 0
+      },
+      "other": {
+        "technical": 1,
+        "billing": 1,
+        "delivery": 0,
+        "other": 0
+      }
+    },
+    "riskScore": 63,
+    "unstable": [],
+    "latencyMsP50": 0,
+    "latencyMsMax": 0
+  },
+  "outcomes": [
+    {
+      "id": "c01",
+      "repeat": 0,
+      "expected": {
+        "category": "billing",
+        "priority": "normal",
+        "humanReview": false
+      },
+      "predicted": {
+        "category": "billing",
+        "priority": "normal",
+        "humanReview": false
+      },
+      "rawPredicted": {
+        "category": "billing",
+        "priority": "normal",
+        "humanReview": false
+      },
+      "evidence": null,
+      "error": null,
+      "latencyMs": 0
+    },
+    {
+      "id": "c02",
+      "repeat": 0,
+      "expected": {
+        "category": "delivery",
+        "priority": "normal",
+        "humanReview": false
+      },
+      "predicted": {
+        "category": "delivery",
+        "priority": "normal",
+        "humanReview": false
+      },
+      "rawPredicted": {
+        "category": "delivery",
+        "priority": "normal",
+        "humanReview": false
+      },
+      "evidence": null,
+      "error": null,
+      "latencyMs": 0
+    },
+    {
+      "id": "c03",
+      "repeat": 0,
+      "expected": {
+        "category": "technical",
+        "priority": "normal",
+        "humanReview": false
+      },
+      "predicted": {
+        "category": "technical",
+        "priority": "normal",
+        "humanReview": false
+      },
+      "rawPredicted": {
+        "category": "technical",
+        "priority": "normal",
+        "humanReview": false
+      },
+      "evidence": null,
+      "error": null,
+      "latencyMs": 0
+    },
+    {
+      "id": "c04",
+      "repeat": 0,
+      "expected": {
+        "category": "technical",
+        "priority": "urgent",
+        "humanReview": false
+      },
+      "predicted": {
+        "category": "technical",
+        "priority": "normal",
+        "humanReview": false
+      },
+      "rawPredicted": {
+        "category": "technical",
+        "priority": "normal",
+        "humanReview": false
+      },
+      "evidence": null,
+      "error": null,
+      "latencyMs": 0
+    },
+    {
+      "id": "c05",
+      "repeat": 0,
+      "expected": {
+        "category": "technical",
+        "priority": "urgent",
+        "humanReview": true
+      },
+      "predicted": {
+        "category": "technical",
+        "priority": "normal",
+        "humanReview": false
+      },
+      "rawPredicted": {
+        "category": "technical",
+        "priority": "normal",
+        "humanReview": false
+      },
+      "evidence": null,
+      "error": null,
+      "latencyMs": 0
+    },
+    {
+      "id": "c06",
+      "repeat": 0,
+      "expected": {
+        "category": "delivery",
+        "priority": "urgent",
+        "humanReview": false
+      },
+      "predicted": {
+        "category": "delivery",
+        "priority": "normal",
+        "humanReview": false
+      },
+      "rawPredicted": {
+        "category": "delivery",
+        "priority": "normal",
+        "humanReview": false
+      },
+      "evidence": null,
+      "error": null,
+      "latencyMs": 0
+    },
+    {
+      "id": "c07",
+      "repeat": 0,
+      "expected": {
+        "category": "technical",
+        "priority": "urgent",
+        "humanReview": true
+      },
+      "predicted": {
+        "category": "technical",
+        "priority": "urgent",
+        "humanReview": false
+      },
+      "rawPredicted": {
+        "category": "technical",
+        "priority": "urgent",
+        "humanReview": false
+      },
+      "evidence": null,
+      "error": null,
+      "latencyMs": 0
+    },
+    {
+      "id": "c08",
+      "repeat": 0,
+      "expected": {
+        "category": "billing",
+        "priority": "normal",
+        "humanReview": false
+      },
+      "predicted": {
+        "category": "billing",
+        "priority": "normal",
+        "humanReview": false
+      },
+      "rawPredicted": {
+        "category": "billing",
+        "priority": "normal",
+        "humanReview": false
+      },
+      "evidence": null,
+      "error": null,
+      "latencyMs": 0
+    },
+    {
+      "id": "c09",
+      "repeat": 0,
+      "expected": {
+        "category": "other",
+        "priority": "normal",
+        "humanReview": false
+      },
+      "predicted": {
+        "category": "billing",
+        "priority": "normal",
+        "humanReview": false
+      },
+      "rawPredicted": {
+        "category": "billing",
+        "priority": "normal",
+        "humanReview": false
+      },
+      "evidence": null,
+      "error": null,
+      "latencyMs": 0
+    },
+    {
+      "id": "c10",
+      "repeat": 0,
+      "expected": {
+        "category": "technical",
+        "priority": "urgent",
+        "humanReview": false
+      },
+      "predicted": {
+        "category": "technical",
+        "priority": "normal",
+        "humanReview": false
+      },
+      "rawPredicted": {
+        "category": "technical",
+        "priority": "normal",
+        "humanReview": false
+      },
+      "evidence": null,
+      "error": null,
+      "latencyMs": 0
+    },
+    {
+      "id": "c11",
+      "repeat": 0,
+      "expected": {
+        "category": "technical",
+        "priority": "normal",
+        "humanReview": false
+      },
+      "predicted": {
+        "category": "technical",
+        "priority": "normal",
+        "humanReview": false
+      },
+      "rawPredicted": {
+        "category": "technical",
+        "priority": "normal",
+        "humanReview": false
+      },
+      "evidence": null,
+      "error": null,
+      "latencyMs": 0
+    },
+    {
+      "id": "c12",
+      "repeat": 0,
+      "expected": {
+        "category": "billing",
+        "priority": "normal",
+        "humanReview": false
+      },
+      "predicted": {
+        "category": "billing",
+        "priority": "urgent",
+        "humanReview": false
+      },
+      "rawPredicted": {
+        "category": "billing",
+        "priority": "urgent",
+        "humanReview": false
+      },
+      "evidence": null,
+      "error": null,
+      "latencyMs": 0
+    },
+    {
+      "id": "c13",
+      "repeat": 0,
+      "expected": {
+        "category": "delivery",
+        "priority": "normal",
+        "humanReview": false
+      },
+      "predicted": {
+        "category": "delivery",
+        "priority": "normal",
+        "humanReview": false
+      },
+      "rawPredicted": {
+        "category": "delivery",
+        "priority": "normal",
+        "humanReview": false
+      },
+      "evidence": null,
+      "error": null,
+      "latencyMs": 0
+    },
+    {
+      "id": "c14",
+      "repeat": 0,
+      "expected": {
+        "category": "technical",
+        "priority": "urgent",
+        "humanReview": true
+      },
+      "predicted": {
+        "category": "technical",
+        "priority": "normal",
+        "humanReview": false
+      },
+      "rawPredicted": {
+        "category": "technical",
+        "priority": "normal",
+        "humanReview": false
+      },
+      "evidence": null,
+      "error": null,
+      "latencyMs": 0
+    },
+    {
+      "id": "c15",
+      "repeat": 0,
+      "expected": {
+        "category": "other",
+        "priority": "normal",
+        "humanReview": false
+      },
+      "predicted": {
+        "category": "technical",
+        "priority": "normal",
+        "humanReview": false
+      },
+      "rawPredicted": {
+        "category": "technical",
+        "priority": "normal",
+        "humanReview": false
+      },
+      "evidence": null,
+      "error": null,
+      "latencyMs": 0
+    }
+  ]
+}

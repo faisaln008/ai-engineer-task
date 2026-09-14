@@ -1,0 +1,96 @@
+> tsx src/run.ts
+
+c01  category ✓   priority ✓   humanReview ✓
+     "Betreff: Falsche Positionssumme in Rechnung RE-2026-1187
+
+Sehr geehrte Damen und…"
+
+c02  category ✓   priority ✓   humanReview ✓
+     "Betreff: Lieferstatus Ersatzteil, Auftrag 55023
+
+Hallo,
+
+das am 11.08. bestellte…"
+
+c03  category ✓   priority ✓   humanReview ✓
+     "Betreff: Anzeigesprache der Steuerung umstellen
+
+Guten Tag,
+
+wie kann ich im Kon…"
+
+c04  category ✓   priority ✗ (normal, expected urgent)   humanReview ✓
+     "Betreff: Störung Verpackungslinie 2 – Fehlercode E-471
+
+Sehr geehrtes Service-Te…"
+
+c05  category ✓   priority ✗ (normal, expected urgent)   humanReview ✗ (false, expected true)
+     "Betreff: Förderband läuft bei offener Schutztür weiter
+
+Guten Tag,
+
+uns ist heut…"
+
+c06  category ✓   priority ✗ (normal, expected urgent)   humanReview ✓
+     "Betreff: Ersatzteillieferung aus KW 32 fehlt weiterhin
+
+Sehr geehrte Damen und H…"
+
+c07  category ✓   priority ✓   humanReview ✗ (false, expected true)
+     "Betreff: Maschine läuft seit Update nicht mehr richtig
+
+Hallo zusammen,
+
+seit de…"
+
+c08  category ✓   priority ✓   humanReview ✓
+     "Betreff: Rechnungskopien Q3 für den Jahresabschluss
+
+Sehr geehrte Damen und Herr…"
+
+c09  category ✗ (billing, expected other)   priority ✓   humanReview ✓
+     "Betreff: Verlängerung unserer Wartungsvereinbarung
+
+Guten Tag,
+
+wir möchten unse…"
+
+c10  category ✓   priority ✗ (normal, expected urgent)   humanReview ✓
+     "Betreff: Anlage startet nach Stromausfall nicht mehr
+
+Sehr geehrtes Service-Team…"
+
+c11  category ✓   priority ✓   humanReview ✓
+     "Betreff: Geräusch an der Hydraulik wieder da
+
+Hallo Herr Falkenstein-Team,
+
+Ihr …"
+
+c12  category ✓   priority ✗ (urgent, expected normal)   humanReview ✓
+     "Betreff: DRINGEND – Rückruf wegen offener Gutschrift
+
+Sehr geehrte Damen und Her…"
+
+c13  category ✓   priority ✓   humanReview ✓
+     "Betreff: Lieferung KW 34 – zwei Paletten beschädigt
+
+Guten Tag,
+
+bei der Lieferu…"
+
+c14  category ✓   priority ✗ (normal, expected urgent)   humanReview ✗ (false, expected true)
+     "Betreff: Öl tritt an der Abfüllanlage aus
+
+Sehr geehrtes Service-Team,
+
+an unser…"
+
+c15  category ✗ (technical, expected other)   priority ✓   humanReview ✓
+     "Betreff: Frage zum neuen Fernwartungsmodul
+
+Guten Tag,
+
+ich habe auf Ihrer Websi…"
+
+Overall: 34/45 fields correct (76%)

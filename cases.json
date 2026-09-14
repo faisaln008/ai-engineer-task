@@ -1,0 +1,77 @@
+[
+  {
+    "id": "c01",
+    "message": "Betreff: Falsche Positionssumme in Rechnung RE-2026-1187\n\nSehr geehrte Damen und Herren,\n\nin Ihrer Rechnung RE-2026-1187 vom 12.08. ist Position 3 (Dichtungssatz DS-40) falsch berechnet: 12 Stück à 38,50 € sind mit 562,00 € statt 462,00 € ausgewiesen. Bitte senden Sie uns eine korrigierte Rechnung.\n\nMit freundlichen Grüßen\nPetra Behrens, Buchhaltung\nNordfrucht Konserven GmbH",
+    "expected": { "category": "billing", "priority": "normal", "humanReview": false }
+  },
+  {
+    "id": "c02",
+    "message": "Betreff: Lieferstatus Ersatzteil, Auftrag 55023\n\nHallo,\n\ndas am 11.08. bestellte Ersatzteil (Förderkette FK-220, Auftragsnummer 55023) ist noch nicht angekommen. Können Sie mir sagen, wann die Lieferung bei uns eintrifft?\n\nDanke und Gruß\nStefan Krause, Instandhaltung\nMolkerei Weidenhof eG",
+    "expected": { "category": "delivery", "priority": "normal", "humanReview": false }
+  },
+  {
+    "id": "c03",
+    "message": "Betreff: Anzeigesprache der Steuerung umstellen\n\nGuten Tag,\n\nwie kann ich im Konfigurationsmenü der FALCON-Steuerung die Anzeigesprache auf Englisch umstellen? Unser neuer Kollege an der Linie spricht kein Deutsch.\n\nViele Grüße\nMarco Steiner, Produktion\nHansa Feinkost GmbH & Co. KG",
+    "expected": { "category": "technical", "priority": "normal", "humanReview": false }
+  },
+  {
+    "id": "c04",
+    "message": "Betreff: Störung Verpackungslinie 2 – Fehlercode E-471\n\nSehr geehrtes Service-Team,\n\nunsere komplette Verpackungslinie 2 steht seit heute Morgen 6:30 Uhr. Auf dem Hauptpanel wird Fehlercode E-471 angezeigt, ein Neustart der Anlage hat nichts geändert.\n\nMit freundlichen Grüßen\nJürgen Plath, Schichtleiter\nGetränke Silberbach GmbH",
+    "expected": { "category": "technical", "priority": "urgent", "humanReview": false }
+  },
+  {
+    "id": "c05",
+    "message": "Betreff: Förderband läuft bei offener Schutztür weiter\n\nGuten Tag,\n\nuns ist heute aufgefallen: Beim Öffnen der Schutztür an der Abfüllanlage AF-300 läuft das Förderband einfach weiter. Das kommt uns nicht sicher vor — sollten wir die Anlage überhaupt weiter betreiben, bis das geklärt ist?\n\nFreundliche Grüße\nSabine Vogler, Betriebsleitung\nKräuterhof Naturkost GmbH",
+    "expected": { "category": "technical", "priority": "urgent", "humanReview": true }
+  },
+  {
+    "id": "c06",
+    "message": "Betreff: Ersatzteillieferung aus KW 32 fehlt weiterhin\n\nSehr geehrte Damen und Herren,\n\ndie in KW 32 zugesagte Ersatzteillieferung (Verschließkopf VK-8) ist immer noch nicht angekommen. Inzwischen steht deshalb unsere Produktionslinie, wir können den Wochenplan nicht mehr halten.\n\nMit freundlichen Grüßen\nThomas Reinartz, Werksleitung\nConfiserie Marbach AG",
+    "expected": { "category": "delivery", "priority": "urgent", "humanReview": false }
+  },
+  {
+    "id": "c07",
+    "message": "Betreff: Maschine läuft seit Update nicht mehr richtig\n\nHallo zusammen,\n\nseit dem letzten Software-Update funktioniert die Maschine nicht mehr richtig — mal bleibt sie hängen, mal laufen die Etiketten schief. Könnt ihr da dringend mal schauen?\n\nGruß\nDennis Falk\nFrischback Backwaren GmbH",
+    "expected": { "category": "technical", "priority": "urgent", "humanReview": true }
+  },
+  {
+    "id": "c08",
+    "message": "Betreff: Rechnungskopien Q3 für den Jahresabschluss\n\nSehr geehrte Damen und Herren,\n\nkönnen Sie mir bitte Kopien aller Rechnungen aus Q3 zusenden? Unsere Buchhaltung benötigt die Unterlagen für den Jahresabschluss.\n\nVielen Dank im Voraus\nKerstin Albrecht, Finanzbuchhaltung\nOstsee Fischwerke GmbH",
+    "expected": { "category": "billing", "priority": "normal", "humanReview": false }
+  },
+  {
+    "id": "c09",
+    "message": "Betreff: Verlängerung unserer Wartungsvereinbarung\n\nGuten Tag,\n\nwir möchten unsere Wartungsvereinbarung um ein weiteres Jahr verlängern. An wen kann ich mich dafür wenden, und gibt es die Konditionen aus dem Vorjahr weiterhin?\n\nBeste Grüße\nHeike Sommerfeld, Einkauf\nGebr. Lindhorst Tiefkühlkost KG",
+    "expected": { "category": "other", "priority": "normal", "humanReview": false }
+  },
+  {
+    "id": "c10",
+    "message": "Betreff: Anlage startet nach Stromausfall nicht mehr\n\nSehr geehrtes Service-Team,\n\nnach dem Stromausfall gestern Abend lässt sich unsere Abfüllanlage nicht mehr hochfahren. Die Steuerung bleibt beim Selbsttest hängen. Wir können aktuell nicht produzieren.\n\nMit freundlichen Grüßen\nAndreas Wenzel, Technische Leitung\nQuellwasser Hohenfels GmbH",
+    "expected": { "category": "technical", "priority": "urgent", "humanReview": false }
+  },
+  {
+    "id": "c11",
+    "message": "Betreff: Geräusch an der Hydraulik wieder da\n\nHallo Herr Falkenstein-Team,\n\nIhr Techniker war letzte Woche bei uns, aber das Geräusch an der Hydraulik ist seit gestern wieder aufgetreten. Nicht schlimm, die Anlage läuft normal — aber auf Dauer nervt es und ich hätte es gern beim nächsten Termin mit angeschaut.\n\nGruß\nMartin Osterkamp\nSenfmühle Brandtner GmbH",
+    "expected": { "category": "technical", "priority": "normal", "humanReview": false }
+  },
+  {
+    "id": "c12",
+    "message": "Betreff: DRINGEND – Rückruf wegen offener Gutschrift\n\nSehr geehrte Damen und Herren,\n\nbitte rufen Sie mich heute noch zurück wegen der seit drei Wochen offenen Gutschrift zu Rechnung RE-2026-0954. Unser Einkauf gibt sonst die nächste Bestellung nicht frei.\n\nMit freundlichen Grüßen\nRalf Neubert, Leitung Einkauf\nDelikata Feinkonserven GmbH",
+    "expected": { "category": "billing", "priority": "normal", "humanReview": false }
+  },
+  {
+    "id": "c13",
+    "message": "Betreff: Lieferung KW 34 – zwei Paletten beschädigt\n\nGuten Tag,\n\nbei der Lieferung aus KW 34 (Lieferschein LS-77812) sind zwei Paletten mit Folienrollen beschädigt angekommen, die Ware ist teilweise nicht verwendbar. Bitte um Ersatzlieferung; Fotos kann ich gerne nachreichen.\n\nFreundliche Grüße\nBirgit Hausmann, Wareneingang\nObsthof Keltermann GmbH",
+    "expected": { "category": "delivery", "priority": "normal", "humanReview": false }
+  },
+  {
+    "id": "c14",
+    "message": "Betreff: Öl tritt an der Abfüllanlage aus\n\nSehr geehrtes Service-Team,\n\nan unserer Abfüllanlage tritt seit heute Öl aus, direkt neben dem Schaltschrank. Wir haben den Bereich vorsichtshalber abgesperrt und die Anlage heruntergefahren.\n\nMit freundlichen Grüßen\nKarin Lehmann, Arbeitssicherheit\nWeingut Sonnleitner GmbH",
+    "expected": { "category": "technical", "priority": "urgent", "humanReview": true }
+  },
+  {
+    "id": "c15",
+    "message": "Betreff: Frage zum neuen Fernwartungsmodul\n\nGuten Tag,\n\nich habe auf Ihrer Website das neue Fernwartungsmodul gesehen. Was kostet das, und funktioniert es auch mit unserer Anlage aus dem Jahr 2019? Wir überlegen, ob sich das für uns lohnt.\n\nViele Grüße\nOliver Brandt, Geschäftsführung\nBrandt & Söhne Gewürzwerk GmbH",
+    "expected": { "category": "other", "priority": "normal", "humanReview": false }
+  }
+]

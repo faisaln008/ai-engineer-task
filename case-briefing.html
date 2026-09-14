@@ -1,0 +1,240 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>AI Engineer Case</title>
+<style>
+  :root {
+    --bg: #f7f6f3;
+    --card: #ffffff;
+    --ink: #1c1c1a;
+    --muted: #6b6a66;
+    --accent: #4f46b8;
+    --border: #e4e2dc;
+    --code-bg: #f0efe9;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #191a1e;
+      --card: #222329;
+      --ink: #ececea;
+      --muted: #9a9994;
+      --accent: #9d97e8;
+      --border: #34353c;
+      --code-bg: #2b2c33;
+    }
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--ink);
+    font: 16px/1.6 -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    padding: 2.5rem 1rem 4rem;
+  }
+  main { max-width: 700px; margin: 0 auto; }
+  header {
+    display: flex; align-items: center; justify-content: space-between;
+    gap: 1rem; flex-wrap: wrap; margin-bottom: 2rem;
+  }
+  h1 { font-size: 1.7rem; margin: 0; letter-spacing: -0.02em; }
+  .header-right { display: flex; align-items: center; gap: 0.7rem; }
+  .timebox {
+    background: var(--accent); color: #fff; border-radius: 999px;
+    padding: 0.25rem 0.9rem; font-size: 0.9rem; font-weight: 600; white-space: nowrap;
+  }
+  .lang-switch {
+    display: inline-flex; border: 1px solid var(--border); border-radius: 999px;
+    overflow: hidden; background: var(--card);
+  }
+  .lang-switch button {
+    border: 0; background: none; color: var(--muted); font: inherit;
+    font-size: 0.85rem; font-weight: 600; padding: 0.25rem 0.8rem; cursor: pointer;
+  }
+  .lang-switch button.active { background: var(--accent); color: #fff; }
+  section {
+    background: var(--card); border: 1px solid var(--border);
+    border-radius: 10px; padding: 1.4rem 1.6rem; margin-bottom: 1.1rem;
+  }
+  h2 { font-size: 1.05rem; margin: 0 0 0.7rem; }
+  h2 .num { color: var(--accent); margin-right: 0.5rem; }
+  p { margin: 0.5rem 0; }
+  ul { margin: 0.5rem 0; padding-left: 1.2rem; }
+  li { margin: 0.3rem 0; }
+  ol { margin: 0.5rem 0; padding-left: 1.4rem; }
+  code, pre {
+    font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+    font-size: 0.88em; background: var(--code-bg); border-radius: 5px;
+  }
+  code { padding: 0.1em 0.35em; }
+  pre { padding: 0.8rem 1rem; overflow-x: auto; line-height: 1.5; }
+  pre code { background: none; padding: 0; }
+  .muted { color: var(--muted); }
+  .closing {
+    border-left: 3px solid var(--accent); padding: 0.2rem 0 0.2rem 1.2rem; margin-top: 1.6rem;
+  }
+  .lang { display: none; }
+  .lang.visible { display: block; }
+</style>
+</head>
+<body>
+<main>
+  <header>
+    <h1>AI Engineer Case</h1>
+    <span class="header-right">
+      <span class="lang-switch">
+        <button id="btn-de" class="active" onclick="setLang('de')">DE</button>
+        <button id="btn-en" onclick="setLang('en')">EN</button>
+      </span>
+      <span class="timebox">&#9201; 30&ndash;45 min</span>
+    </span>
+  </header>
+
+  <div class="lang visible" id="lang-de">
+    <section>
+      <h2><span class="num">&#9312;</span>Die Situation</h2>
+      <p>Die <strong>Falkenstein Maschinenbau GmbH</strong> (fiktiv) baut Verpackungs-
+      und Abf&uuml;llanlagen f&uuml;r rund 800 Kunden. Im zentralen Service-Postfach landen
+      t&auml;glich Dutzende E-Mails: Rechnungsfragen, Lieferstatus von Ersatzteilen,
+      technische St&ouml;rungen &mdash; und dazwischen die wirklich kritischen F&auml;lle,
+      etwa eine stehende Produktionslinie beim Kunden. Bisher sortiert ein Mensch
+      alles von Hand.</p>
+      <p>Du &uuml;bernimmst ein kleines AI-Feature, das das automatisieren soll.
+      Es liest jede eingehende Nachricht und gibt drei Entscheidungen zur&uuml;ck:</p>
+<pre><code>{
+  category:    "technical" | "billing" | "delivery" | "other",
+  priority:    "normal" | "urgent",
+  humanReview: boolean
+}</code></pre>
+      <ul>
+        <li><code>category</code> &mdash; welches Team die Anfrage bekommt: Technik, Buchhaltung, Versand/Ersatzteile oder Rest.</li>
+        <li><code>priority</code> &mdash; <code>urgent</code> &uuml;berspringt die Warteschlange und alarmiert den Bereitschaftsdienst.</li>
+        <li><code>humanReview</code> &mdash; <code>true</code> legt die Nachricht zus&auml;tzlich einem Menschen zur Kontrolle vor.</li>
+      </ul>
+      <p>Zwei Beispiele: <em>&bdquo;Die Rechnung RE-2026-1187 enth&auml;lt eine falsche
+      Positionssumme&ldquo;</em> geht als <code>billing / normal</code> in den normalen
+      Buchhaltungs-Stapel. <em>&bdquo;Unsere komplette Verpackungslinie steht seit heute
+      Morgen&ldquo;</em> muss dagegen sofort beim Bereitschaftsdienst landen &mdash;
+      jede Stunde Stillstand kostet den Kunden Geld.</p>
+      <p>Die erste Version funktioniert ganz ordentlich &mdash; aber das Team traut ihr
+      noch nicht genug, um sich breiter darauf zu verlassen.</p>
+    </section>
+
+    <section>
+      <h2><span class="num">&#9313;</span>Business-Kontext</h2>
+      <ul>
+        <li>Eine falsche <code>category</code> verursacht manuelle Mehrarbeit, ist aber meist unkritisch.</li>
+        <li>Eine wirklich dringende Anfrage als <code>normal</code> einzustufen hei&szlig;t: ein Kunde bekommt zu sp&auml;t Hilfe.</li>
+        <li><code>humanReview: true</code> ist sicher, kostet aber manuelle Arbeitszeit.</li>
+        <li>Wenn fast alles an Menschen geht, hat das System keinen echten Automatisierungswert.</li>
+      </ul>
+    </section>
+
+    <section>
+      <h2><span class="num">&#9314;</span>Deine Aufgabe</h2>
+      <p><strong>Finde heraus, was schiefl&auml;uft, und verbessere das System.</strong>
+      Nutze die Zeit so, wie du sie f&uuml;r am sinnvollsten h&auml;ltst. &Auml;ndern darfst
+      du den Prompt (<code>prompt.md</code>), Code, Schema und die Auswertungslogik.
+      Du musst keine neue Anwendung und keine neue Architektur bauen.</p>
+      <p class="muted">Nutze Claude Code, Cursor, Codex &mdash; oder womit du sonst normalerweise arbeitest.</p>
+<pre><code>cp .env.example .env   # API-Key eintragen — den bekommst du von uns
+npm install
+npm run case</code></pre>
+    </section>
+
+    <section>
+      <h2><span class="num">&#9315;</span>Danach erkl&auml;rst du uns</h2>
+      <ol>
+        <li>Wie du entschieden hast, ob das System gut oder schlecht ist</li>
+        <li>Was du gefunden hast</li>
+        <li>Was du ge&auml;ndert hast</li>
+        <li>Ob deine &Auml;nderung eine Verbesserung war</li>
+        <li>Was du als N&auml;chstes tun w&uuml;rdest, bevor das in Produktion geht</li>
+      </ol>
+    </section>
+
+    <p class="closing">Das war&rsquo;s. Wir suchen nicht die raffinierteste L&ouml;sung.
+    Wir wollen verstehen, wie du an die Frage herangehst:
+    <strong>Ist das gut genug, um sich darauf zu verlassen?</strong></p>
+  </div>
+
+  <div class="lang" id="lang-en">
+    <section>
+      <h2><span class="num">&#9312;</span>The situation</h2>
+      <p><strong>Falkenstein Maschinenbau GmbH</strong> (fictional) builds packaging
+      and filling machinery for around 800 customers. Dozens of emails land in the
+      central service inbox every day: invoice questions, spare-part delivery status,
+      technical faults &mdash; and, in between, the genuinely critical ones, such as a
+      production line standing still at a customer&rsquo;s plant. Until now, a human
+      sorts all of it by hand.</p>
+      <p>You are taking over a small AI feature that is meant to automate this.
+      It reads every incoming message (in German) and returns three decisions:</p>
+<pre><code>{
+  category:    "technical" | "billing" | "delivery" | "other",
+  priority:    "normal" | "urgent",
+  humanReview: boolean
+}</code></pre>
+      <ul>
+        <li><code>category</code> &mdash; which team receives the request: technical service, accounting, shipping/spare parts, or everything else.</li>
+        <li><code>priority</code> &mdash; <code>urgent</code> skips the queue and alerts the on-call service team.</li>
+        <li><code>humanReview</code> &mdash; <code>true</code> additionally puts the message in front of a human for review.</li>
+      </ul>
+      <p>Two examples: <em>&ldquo;Invoice RE-2026-1187 contains a wrong line-item
+      total&rdquo;</em> goes into the regular accounting pile as <code>billing / normal</code>.
+      <em>&ldquo;Our entire packaging line has been down since this morning&rdquo;</em>
+      must reach the on-call team immediately &mdash; every hour of downtime costs the
+      customer money.</p>
+      <p>The first version works reasonably well, but the team is not confident enough
+      to rely on it more broadly.</p>
+    </section>
+
+    <section>
+      <h2><span class="num">&#9313;</span>Business context</h2>
+      <ul>
+        <li>A wrong <code>category</code> causes extra manual work, but is usually not critical.</li>
+        <li>A truly urgent request classified as <code>normal</code> means a customer gets help too late.</li>
+        <li><code>humanReview: true</code> is safe, but costs manual working time.</li>
+        <li>If almost everything goes to human review, the system has no real automation value.</li>
+      </ul>
+    </section>
+
+    <section>
+      <h2><span class="num">&#9314;</span>Your task</h2>
+      <p><strong>Figure out what is going wrong and improve the system.</strong>
+      Use the time however you think is most useful. You may change the prompt
+      (<code>prompt.md</code>), code, schema, and evaluation logic. You do not need to
+      build a new application or architecture.</p>
+      <p class="muted">Use Claude Code, Cursor, Codex or whatever tools you normally use.</p>
+<pre><code>cp .env.example .env   # add the API key we provide to you
+npm install
+npm run case</code></pre>
+    </section>
+
+    <section>
+      <h2><span class="num">&#9315;</span>Afterwards, be ready to explain</h2>
+      <ol>
+        <li>How you decided whether the system was good or bad</li>
+        <li>What you found</li>
+        <li>What you changed</li>
+        <li>Whether the change improved it</li>
+        <li>What you would do next before putting it into production</li>
+      </ol>
+    </section>
+
+    <p class="closing">That&rsquo;s it. We&rsquo;re not looking for the most sophisticated
+    solution. We want to understand how you approach the question:
+    <strong>Is this good enough to rely on?</strong></p>
+  </div>
+</main>
+<script>
+function setLang(lang) {
+  document.getElementById("lang-de").classList.toggle("visible", lang === "de");
+  document.getElementById("lang-en").classList.toggle("visible", lang === "en");
+  document.getElementById("btn-de").classList.toggle("active", lang === "de");
+  document.getElementById("btn-en").classList.toggle("active", lang === "en");
+  document.documentElement.lang = lang;
+}
+</script>
+</body>
+</html>

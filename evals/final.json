@@ -1,0 +1,469 @@
+{
+  "tag": "final",
+  "createdAt": "2026-09-14T07:59:40.713Z",
+  "model": "default",
+  "provider": "requesty",
+  "options": {
+    "repeats": 1,
+    "policy": true
+  },
+  "metrics": {
+    "cases": 15,
+    "scored": 15,
+    "errors": 0,
+    "exactMatch": 15,
+    "exactMatchRate": 1,
+    "fieldAccuracy": {
+      "category": 1,
+      "priority": 1,
+      "humanReview": 1
+    },
+    "missedUrgent": 0,
+    "falseAlarm": 0,
+    "urgentRecall": 1,
+    "urgentPrecision": 1,
+    "missedReview": 0,
+    "extraReview": 0,
+    "reviewRate": 0.2,
+    "reviewRecall": 1,
+    "reviewPrecision": 1,
+    "wrongCategory": 0,
+    "categoryConfusion": {
+      "technical": {
+        "technical": 7,
+        "billing": 0,
+        "delivery": 0,
+        "other": 0
+      },
+      "billing": {
+        "technical": 0,
+        "billing": 3,
+        "delivery": 0,
+        "other": 0
+      },
+      "delivery": {
+        "technical": 0,
+        "billing": 0,
+        "delivery": 3,
+        "other": 0
+      },
+      "other": {
+        "technical": 0,
+        "billing": 0,
+        "delivery": 0,
+        "other": 2
+      }
+    },
+    "riskScore": 0,
+    "unstable": [],
+    "latencyMsP50": 2047,
+    "latencyMsMax": 2566
+  },
+  "outcomes": [
+    {
+      "id": "c01",
+      "repeat": 0,
+      "expected": {
+        "category": "billing",
+        "priority": "normal",
+        "humanReview": false
+      },
+      "predicted": {
+        "category": "billing",
+        "priority": "normal",
+        "humanReview": false
+      },
+      "rawPredicted": {
+        "category": "billing",
+        "priority": "normal",
+        "humanReview": false
+      },
+      "evidence": {
+        "reasoning": "Customer reports an arithmetic error on invoice RE-2026-1187: line item 3 (seal kit DS-40) is invoiced at €562.00 instead of the correct €462.00 (12 units × €38.50). They request a corrected invoice.",
+        "impact": "none",
+        "customerSignalsUrgency": false,
+        "ambiguous": false
+      },
+      "error": null,
+      "latencyMs": 2105
+    },
+    {
+      "id": "c02",
+      "repeat": 0,
+      "expected": {
+        "category": "delivery",
+        "priority": "normal",
+        "humanReview": false
+      },
+      "predicted": {
+        "category": "delivery",
+        "priority": "normal",
+        "humanReview": false
+      },
+      "rawPredicted": {
+        "category": "delivery",
+        "priority": "normal",
+        "humanReview": false
+      },
+      "evidence": {
+        "reasoning": "Customer ordered a conveyor chain (FK-220) on 11 August under order 55023 and is asking for the delivery status and expected arrival date. No indication that production has stopped yet.",
+        "impact": "none",
+        "customerSignalsUrgency": false,
+        "ambiguous": false
+      },
+      "error": null,
+      "latencyMs": 2473
+    },
+    {
+      "id": "c03",
+      "repeat": 0,
+      "expected": {
+        "category": "technical",
+        "priority": "normal",
+        "humanReview": false
+      },
+      "predicted": {
+        "category": "technical",
+        "priority": "normal",
+        "humanReview": false
+      },
+      "rawPredicted": {
+        "category": "technical",
+        "priority": "normal",
+        "humanReview": false
+      },
+      "evidence": {
+        "reasoning": "Customer asks how to change the display language of the FALCON control system from German to English in the configuration menu. The machine is running normally and this is a straightforward operational/configuration question.",
+        "impact": "none",
+        "customerSignalsUrgency": false,
+        "ambiguous": false
+      },
+      "error": null,
+      "latencyMs": 1798
+    },
+    {
+      "id": "c04",
+      "repeat": 0,
+      "expected": {
+        "category": "technical",
+        "priority": "urgent",
+        "humanReview": false
+      },
+      "predicted": {
+        "category": "technical",
+        "priority": "urgent",
+        "humanReview": false
+      },
+      "rawPredicted": {
+        "category": "technical",
+        "priority": "urgent",
+        "humanReview": false
+      },
+      "evidence": {
+        "reasoning": "Customer reports that packaging line 2 has been completely stopped since 6:30 AM this morning with error code E-471 displayed on the main panel; restart did not resolve it. This is a technical fault causing production to halt.",
+        "impact": "stopped",
+        "customerSignalsUrgency": false,
+        "ambiguous": false
+      },
+      "error": null,
+      "latencyMs": 2015
+    },
+    {
+      "id": "c05",
+      "repeat": 0,
+      "expected": {
+        "category": "technical",
+        "priority": "urgent",
+        "humanReview": true
+      },
+      "predicted": {
+        "category": "technical",
+        "priority": "urgent",
+        "humanReview": true
+      },
+      "rawPredicted": {
+        "category": "technical",
+        "priority": "urgent",
+        "humanReview": true
+      },
+      "evidence": {
+        "reasoning": "Customer reports that the conveyor belt on filling machine AF-300 continues running when the safety door is opened, and is asking whether it is safe to keep operating the machine. This is a defeated safety interlock — a direct safety hazard.",
+        "impact": "safety",
+        "customerSignalsUrgency": false,
+        "ambiguous": false
+      },
+      "error": null,
+      "latencyMs": 2566
+    },
+    {
+      "id": "c06",
+      "repeat": 0,
+      "expected": {
+        "category": "delivery",
+        "priority": "urgent",
+        "humanReview": false
+      },
+      "predicted": {
+        "category": "delivery",
+        "priority": "urgent",
+        "humanReview": false
+      },
+      "rawPredicted": {
+        "category": "delivery",
+        "priority": "urgent",
+        "humanReview": false
+      },
+      "evidence": {
+        "reasoning": "Customer ordered a spare part (closure head VK-8) promised in week 32, which has not arrived. The missing part has caused their production line to stop and they cannot meet their weekly schedule.",
+        "impact": "stopped",
+        "customerSignalsUrgency": false,
+        "ambiguous": false
+      },
+      "error": null,
+      "latencyMs": 2212
+    },
+    {
+      "id": "c07",
+      "repeat": 0,
+      "expected": {
+        "category": "technical",
+        "priority": "urgent",
+        "humanReview": true
+      },
+      "predicted": {
+        "category": "technical",
+        "priority": "urgent",
+        "humanReview": true
+      },
+      "rawPredicted": {
+        "category": "technical",
+        "priority": "urgent",
+        "humanReview": true
+      },
+      "evidence": {
+        "reasoning": "Customer reports that their machine behaves erratically since a software update: it hangs intermittently and produces misaligned labels. They are asking for urgent technical support.",
+        "impact": "degraded",
+        "customerSignalsUrgency": true,
+        "ambiguous": true
+      },
+      "error": null,
+      "latencyMs": 2083
+    },
+    {
+      "id": "c08",
+      "repeat": 0,
+      "expected": {
+        "category": "billing",
+        "priority": "normal",
+        "humanReview": false
+      },
+      "predicted": {
+        "category": "billing",
+        "priority": "normal",
+        "humanReview": false
+      },
+      "rawPredicted": {
+        "category": "billing",
+        "priority": "normal",
+        "humanReview": false
+      },
+      "evidence": {
+        "reasoning": "Customer's accounting department is requesting copies of all invoices from Q3 for year-end closing purposes. No machine is involved or affected.",
+        "impact": "none",
+        "customerSignalsUrgency": false,
+        "ambiguous": false
+      },
+      "error": null,
+      "latencyMs": 1995
+    },
+    {
+      "id": "c09",
+      "repeat": 0,
+      "expected": {
+        "category": "other",
+        "priority": "normal",
+        "humanReview": false
+      },
+      "predicted": {
+        "category": "other",
+        "priority": "normal",
+        "humanReview": false
+      },
+      "rawPredicted": {
+        "category": "other",
+        "priority": "normal",
+        "humanReview": false
+      },
+      "evidence": {
+        "reasoning": "Customer is asking about renewal of a maintenance contract and pricing terms. This is a contract and commercial administration question, not a technical fault or machine issue.",
+        "impact": "none",
+        "customerSignalsUrgency": false,
+        "ambiguous": false
+      },
+      "error": null,
+      "latencyMs": 1689
+    },
+    {
+      "id": "c10",
+      "repeat": 0,
+      "expected": {
+        "category": "technical",
+        "priority": "urgent",
+        "humanReview": false
+      },
+      "predicted": {
+        "category": "technical",
+        "priority": "urgent",
+        "humanReview": false
+      },
+      "rawPredicted": {
+        "category": "technical",
+        "priority": "urgent",
+        "humanReview": false
+      },
+      "evidence": {
+        "reasoning": "The customer reports that their filling line will not start after a power outage yesterday; the control system hangs during self-test and production is halted. This is a technical fault on the machine itself following a power event.",
+        "impact": "stopped",
+        "customerSignalsUrgency": false,
+        "ambiguous": false
+      },
+      "error": null,
+      "latencyMs": 2339
+    },
+    {
+      "id": "c11",
+      "repeat": 0,
+      "expected": {
+        "category": "technical",
+        "priority": "normal",
+        "humanReview": false
+      },
+      "predicted": {
+        "category": "technical",
+        "priority": "normal",
+        "humanReview": false
+      },
+      "rawPredicted": {
+        "category": "technical",
+        "priority": "normal",
+        "humanReview": false
+      },
+      "evidence": {
+        "reasoning": "Customer reports a recurring hydraulic noise that reappeared after a technician visit last week. The machine is running normally, but the noise is persistent and the customer wants it investigated at the next service visit.",
+        "impact": "degraded",
+        "customerSignalsUrgency": false,
+        "ambiguous": false
+      },
+      "error": null,
+      "latencyMs": 1714
+    },
+    {
+      "id": "c12",
+      "repeat": 0,
+      "expected": {
+        "category": "billing",
+        "priority": "normal",
+        "humanReview": false
+      },
+      "predicted": {
+        "category": "billing",
+        "priority": "normal",
+        "humanReview": false
+      },
+      "rawPredicted": {
+        "category": "billing",
+        "priority": "normal",
+        "humanReview": false
+      },
+      "evidence": {
+        "reasoning": "Customer is requesting a callback today regarding an outstanding credit note for invoice RE-2026-0954 that has been pending for three weeks. This is blocking their next purchase order approval.",
+        "impact": "none",
+        "customerSignalsUrgency": true,
+        "ambiguous": false
+      },
+      "error": null,
+      "latencyMs": 2101
+    },
+    {
+      "id": "c13",
+      "repeat": 0,
+      "expected": {
+        "category": "delivery",
+        "priority": "normal",
+        "humanReview": false
+      },
+      "predicted": {
+        "category": "delivery",
+        "priority": "normal",
+        "humanReview": false
+      },
+      "rawPredicted": {
+        "category": "delivery",
+        "priority": "normal",
+        "humanReview": false
+      },
+      "evidence": {
+        "reasoning": "Customer reports that two pallets of film rolls from delivery LS-77812 (week 34) arrived damaged and are partially unusable. They request replacement delivery and offer to provide photos.",
+        "impact": "none",
+        "customerSignalsUrgency": false,
+        "ambiguous": false
+      },
+      "error": null,
+      "latencyMs": 1737
+    },
+    {
+      "id": "c14",
+      "repeat": 0,
+      "expected": {
+        "category": "technical",
+        "priority": "urgent",
+        "humanReview": true
+      },
+      "predicted": {
+        "category": "technical",
+        "priority": "urgent",
+        "humanReview": true
+      },
+      "rawPredicted": {
+        "category": "technical",
+        "priority": "urgent",
+        "humanReview": true
+      },
+      "evidence": {
+        "reasoning": "Oil is leaking from the filling machine next to the control cabinet. The customer has cordoned off the area and shut down the machine as a precaution. This is a safety hazard (leak near electrical equipment) and production is stopped.",
+        "impact": "safety",
+        "customerSignalsUrgency": false,
+        "ambiguous": false
+      },
+      "error": null,
+      "latencyMs": 1637
+    },
+    {
+      "id": "c15",
+      "repeat": 0,
+      "expected": {
+        "category": "other",
+        "priority": "normal",
+        "humanReview": false
+      },
+      "predicted": {
+        "category": "other",
+        "priority": "normal",
+        "humanReview": false
+      },
+      "rawPredicted": {
+        "category": "other",
+        "priority": "normal",
+        "humanReview": false
+      },
+      "evidence": {
+        "reasoning": "Customer is asking about pricing and compatibility of a new remote maintenance module for their 2019 machine. This is a sales and product enquiry, not a technical fault or operational issue.",
+        "impact": "none",
+        "customerSignalsUrgency": false,
+        "ambiguous": false
+      },
+      "error": null,
+      "latencyMs": 2047
+    }
+  ]
+}

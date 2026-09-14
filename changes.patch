@@ -1,0 +1,995 @@
+diff --git a/package.json b/package.json
+--- a/package.json	2026-09-14 10:01:33
++++ b/package.json	2026-09-14 10:01:41
+@@ -3,7 +3,10 @@
+   "private": true,
+   "type": "module",
+   "scripts": {
+-    "case": "tsx src/run.ts"
++    "case": "tsx src/run.ts",
++    "eval": "tsx src/run.ts",
++    "baseline": "tsx src/baseline.ts",
++    "typecheck": "tsc --noEmit"
+   },
+   "dependencies": {
+     "@ai-sdk/anthropic": "^2.0.0",
+diff --git a/prompt.md b/prompt.md
+--- a/prompt.md	2026-09-14 10:01:33
++++ b/prompt.md	2026-09-14 10:01:41
+@@ -1,26 +1,80 @@
+-You classify incoming customer service requests for a German machine manufacturer.
++You triage incoming customer emails for Falkenstein Maschinenbau GmbH, a German
++manufacturer of packaging and filling machinery. Messages are in German. You
++report what the message says; the routing system applies company policy to it.
+ 
+-Return a JSON object with:
++Work through two independent questions. Do not let one answer influence the other.
+ 
+-- category: "technical" | "billing" | "delivery" | "other"
+-- priority: "normal" | "urgent"
+-- humanReview: boolean
++## 1. Who owns this request? (`category`)
+ 
+-Categories:
++Pick the team that does the work. Severity is irrelevant here — a stopped
++production line caused by a late spare part is still `delivery`.
+ 
+-- technical: questions or problems concerning machines, software or equipment
+-- billing: invoices, credit notes, payments
+-- delivery: shipping and spare part deliveries
+-- other: everything else
++- `technical` — the machine itself: faults, error codes, software, operation,
++  configuration, maintenance visits.
++- `billing` — invoices, credit notes, payments, dunning, accounting paperwork.
++- `delivery` — shipping and spare parts: where is my order, late deliveries,
++  damaged or wrong goods.
++- `other` — anything no single team above owns: contract renewals, pricing and
++  sales enquiries, new products, general questions.
+ 
+-Priority:
++If a message is a sales or contract question that merely mentions a machine,
++it is `other`, not `technical`.
+ 
+-- Set priority to "urgent" only when the customer explicitly marks the request as
+-  urgent (for example "dringend", "urgent", "ASAP" or a stated deadline).
+-  We had too many false alarms in the past, so do not guess urgency.
++## 2. What is happening on their production floor? (`impact`)
+ 
+-Human review:
++Report only what the customer states or plainly implies. Do not speculate.
+ 
+-- Set humanReview to true only when you cannot clearly determine the category.
++- `none` — no machine is affected. Commercial and administrative mail, and
++  questions about a machine that is running fine.
++- `degraded` — a machine runs but misbehaves: intermittent stops, faulty output,
++  wrong results, unusual noise.
++- `stopped` — production is halted, for **any** reason. "Die Linie steht", "wir
++  können nicht produzieren", "die Anlage lässt sich nicht starten", or a missing
++  part that has brought the line to a standstill. The message must actually say
++  production has stopped. Goods that arrived damaged, late, wrong or unusable are
++  **not** `stopped` on their own — that is `none` unless the customer tells you
++  the line is now standing still.
++- `safety` — someone could be hurt: a defeated or ineffective safety device, a
++  leak, smoke, fire, electrical hazard, or the customer asking whether the
++  machine is safe to keep running. `safety` outranks the others — use it even if
++  production continues.
+ 
+-Return valid JSON only.
++Then set:
++
++- `customerSignalsUrgency` — true only if they explicitly push for speed
++  ("dringend", "ASAP", "bitte heute noch", a stated deadline). This is a hint,
++  never a decision on its own.
++- `ambiguous` — true if a technician could not act on this without asking a
++  question first. In particular: intermittent or unreproducible faults, several
++  unrelated symptoms reported at once, no error code and no identifiable cause,
++  or the customer asking you to make a judgement call for them. A clearly
++  identified fault — an error code, a named component, an obvious trigger — is
++  not ambiguous, however serious it is.
++
++## 3. The decisions
++
++- `priority` — `urgent` when production is stopped or there is a safety concern,
++  or when a machine is degraded **and** the customer is pushing for speed.
++  Otherwise `normal`. Commercial and administrative requests are never `urgent`,
++  however insistently they are worded — a late payment is not a stopped machine.
++- `humanReview` — `true` for safety concerns, and when you are escalating
++  something you are not confident about. `false` for a clear-cut fault with an
++  obvious owner, even a severe one. This is not about category doubt. Every
++  `true` costs a person's time, so do not use it as a hedge.
++- `reasoning` — one or two sentences, in English, stating what they want and what
++  is happening on the floor. Write this first; it is read by on-call staff.
++
++## Two boundaries that are easy to get wrong
++
++**Loud but harmless.** "DRINGEND – bitte rufen Sie mich heute noch zurück wegen
++der offenen Gutschrift zu Rechnung RE-2026-0954." — shouting, a same-day
++deadline, but no machine is involved.
++→ `billing`, impact `none`, customerSignalsUrgency `true`, priority **`normal`**.
++
++**Quiet but critical.** "Die in KW 32 zugesagte Ersatzteillieferung ist immer
++noch nicht angekommen. Inzwischen steht deshalb unsere Produktionslinie." — calm,
++polite, no urgency word anywhere, and their factory is idle.
++→ `delivery`, impact `stopped`, customerSignalsUrgency `false`, priority **`urgent`**.
++
++Urgency comes from what is happening to the machine, not from how the email is
++written. German engineers describe the fault, not their feelings about it.
+diff --git a/src/baseline.ts b/src/baseline.ts
+--- a/src/baseline.ts	1970-01-01 01:00:00
++++ b/src/baseline.ts	2026-09-14 10:01:41
+@@ -0,0 +1,76 @@
++/**
++ * Reconstructs `evals/baseline.json` from the ORIGINAL system's recorded run,
++ * so "before" and "after" are scored by identical code.
++ *
++ * Provenance: the per-case predictions below are transcribed from
++ * `evals/baseline-original-harness.txt` — the output of `npm run case` against
++ * the unmodified repo (old prompt.md, old classify.ts with the EXPLICIT_URGENCY
++ * override). That run reported "34/45 fields correct (76%)".
++ *
++ * Run with: npx tsx src/baseline.ts
++ */
++import { mkdirSync, writeFileSync } from "node:fs";
++import { loadCases } from "./cases";
++import { score, type CaseOutcome } from "./metrics";
++import type { Decision } from "./schema";
++
++const ORIGINAL_PREDICTIONS: Record<string, Decision> = {
++  c01: { category: "billing", priority: "normal", humanReview: false },
++  c02: { category: "delivery", priority: "normal", humanReview: false },
++  c03: { category: "technical", priority: "normal", humanReview: false },
++  c04: { category: "technical", priority: "normal", humanReview: false },
++  c05: { category: "technical", priority: "normal", humanReview: false },
++  c06: { category: "delivery", priority: "normal", humanReview: false },
++  c07: { category: "technical", priority: "urgent", humanReview: false },
++  c08: { category: "billing", priority: "normal", humanReview: false },
++  c09: { category: "billing", priority: "normal", humanReview: false },
++  c10: { category: "technical", priority: "normal", humanReview: false },
++  c11: { category: "technical", priority: "normal", humanReview: false },
++  c12: { category: "billing", priority: "urgent", humanReview: false },
++  c13: { category: "delivery", priority: "normal", humanReview: false },
++  c14: { category: "technical", priority: "normal", humanReview: false },
++  c15: { category: "technical", priority: "normal", humanReview: false },
++};
++
++const outcomes: CaseOutcome[] = loadCases().map((c) => {
++  const predicted = ORIGINAL_PREDICTIONS[c.id];
++  if (predicted === undefined) throw new Error(`no recorded baseline prediction for ${c.id}`);
++  return {
++    id: c.id,
++    repeat: 0,
++    expected: c.expected,
++    predicted,
++    rawPredicted: predicted,
++    evidence: null,
++    error: null,
++    latencyMs: 0,
++  };
++});
++
++const metrics = score(outcomes);
++mkdirSync("evals", { recursive: true });
++writeFileSync(
++  "evals/baseline.json",
++  JSON.stringify(
++    {
++      tag: "baseline",
++      createdAt: new Date().toISOString(),
++      note: "Original system (old prompt + EXPLICIT_URGENCY override), transcribed from evals/baseline-original-harness.txt",
++      options: { repeats: 1, policy: false },
++      metrics,
++      outcomes,
++    },
++    null,
++    2,
++  ),
++  "utf-8",
++);
++
++console.log("Baseline reconstructed from the original run:");
++console.log(`  exact match   ${metrics.exactMatch}/15`);
++console.log(`  missedUrgent  ${metrics.missedUrgent}`);
++console.log(`  falseAlarm    ${metrics.falseAlarm}`);
++console.log(`  missedReview  ${metrics.missedReview}`);
++console.log(`  reviewRate    ${(metrics.reviewRate * 100).toFixed(0)}%`);
++console.log(`  riskScore     ${metrics.riskScore}`);
++console.log("Saved → evals/baseline.json");
+diff --git a/src/cases.ts b/src/cases.ts
+--- a/src/cases.ts	1970-01-01 01:00:00
++++ b/src/cases.ts	2026-09-14 10:01:41
+@@ -0,0 +1,30 @@
++import { readFileSync } from "node:fs";
++import { z } from "zod";
++import { DecisionSchema } from "./schema";
++
++export const TriageCaseSchema = z.object({
++  id: z.string().min(1),
++  message: z.string().min(1),
++  expected: DecisionSchema,
++});
++
++export type TriageCase = z.infer<typeof TriageCaseSchema>;
++
++const TriageCaseFileSchema = z.array(TriageCaseSchema).min(1);
++
++/**
++ * The original code did `JSON.parse(...) as Case[]`, which is a compile-time
++ * fiction: a typo in a label ("urgant") would have silently scored every case
++ * against a value the model can never produce. Parse, don't cast.
++ */
++export function loadCases(path = "cases.json"): readonly TriageCase[] {
++  const raw: unknown = JSON.parse(readFileSync(path, "utf-8"));
++  const result = TriageCaseFileSchema.safeParse(raw);
++  if (!result.success) {
++    const issues = result.error.issues
++      .map((i) => `  - ${i.path.join(".") || "(root)"}: ${i.message}`)
++      .join("\n");
++    throw new Error(`${path} is not a valid case file:\n${issues}`);
++  }
++  return result.data;
++}
+diff --git a/src/classify.ts b/src/classify.ts
+--- a/src/classify.ts	2026-09-14 10:01:33
++++ b/src/classify.ts	2026-09-14 10:01:41
+@@ -22,20 +22,45 @@
+   return anthropic(model ?? "claude-haiku-4-5");
+ }
+ 
+-// The model kept guessing "urgent" and caused false alarms, so urgency now
+-// requires an explicit marker in the message (same rule as in prompt.md).
+-const EXPLICIT_URGENCY = /dringend|urgent|asap|eilig|so schnell wie möglich/i;
++const sleep = (ms: number): Promise<void> => new Promise((r) => setTimeout(r, ms));
+ 
++/**
++ * Rate limits and transient 5xx are normal at any real volume. Previously a
++ * single failure anywhere in the run threw and destroyed the whole evaluation,
++ * which makes a red run ambiguous: bad model, or bad network?
++ */
++async function withRetry<T>(fn: () => Promise<T>, attempts = 3): Promise<T> {
++  let lastError: unknown;
++  for (let attempt = 0; attempt < attempts; attempt++) {
++    try {
++      return await fn();
++    } catch (err) {
++      lastError = err;
++      if (attempt < attempts - 1) await sleep(500 * 2 ** attempt);
++    }
++  }
++  throw lastError;
++}
++
++/**
++ * Returns the model's raw judgement, including its evidence fields.
++ *
++ * Note what is NOT here any more: the old `EXPLICIT_URGENCY` regex that forced
++ * `priority: "normal"` whenever the message lacked the word "dringend". It cost
++ * five escalations out of five in the sample set — a stopped line, a dead plant
++ * and two safety incidents — because German engineers describe the fault, not
++ * their feelings about it. Escalation policy now lives in `policy.ts`, where it
++ * can only ever escalate.
++ */
+ export async function classify(message: string): Promise<Classification> {
+-  const { object } = await generateObject({
+-    model: getModel(),
+-    schema: ClassificationSchema,
+-    system: prompt,
+-    prompt: message,
+-    temperature: 0,
++  return withRetry(async () => {
++    const { object } = await generateObject({
++      model: getModel(),
++      schema: ClassificationSchema,
++      system: prompt,
++      prompt: message,
++      temperature: 0,
++    });
++    return object;
+   });
+-  if (!EXPLICIT_URGENCY.test(message)) {
+-    return { ...object, priority: "normal" };
+-  }
+-  return object;
+ }
+diff --git a/src/metrics.ts b/src/metrics.ts
+--- a/src/metrics.ts	1970-01-01 01:00:00
++++ b/src/metrics.ts	2026-09-14 10:01:41
+@@ -0,0 +1,294 @@
++import {
++  CATEGORIES,
++  DECISION_FIELDS,
++  type Category,
++  type Decision,
++  type DecisionField,
++  type Evidence,
++} from "./schema";
++
++export type CaseOutcome = {
++  id: string;
++  repeat: number;
++  expected: Decision;
++  /** null when the API call failed after retries. */
++  predicted: Decision | null;
++  /** What the model reported before policy was applied. Null on failure. */
++  evidence: Evidence | null;
++  /** The model's raw decision before `policy.ts` escalated anything. */
++  rawPredicted: Decision | null;
++  error: string | null;
++  latencyMs: number;
++};
++
++/**
++ * Weights are quoted from the brief, not invented:
++ *
++ *   "A truly urgent request classified as normal means a customer gets help
++ *    too late."                                          -> missedUrgent, 10
++ *   "A wrong category causes extra manual work, but is
++ *    usually not critical."                              -> wrongCategory, 1
++ *   "humanReview: true is safe, but costs manual working
++ *    time."                                              -> extraReview, 1
++ *
++ * The two the brief implies rather than states: a false alarm wakes the on-call
++ * team (2), and failing to flag a safety case for review is bad but less bad
++ * than never escalating it at all (3).
++ *
++ * A single number lets us compare runs. The weights are arguable — that is the
++ * point. They are explicit, in code, and a stakeholder can change them.
++ */
++export const COST = {
++  missedUrgent: 10,
++  missedReview: 3,
++  falseAlarm: 2,
++  wrongCategory: 1,
++  extraReview: 1,
++} as const;
++
++export type CategoryConfusion = Record<Category, Record<Category, number>>;
++
++export type Metrics = {
++  cases: number;
++  scored: number;
++  errors: number;
++
++  /** All three fields correct. The headline: far harsher than a field average. */
++  exactMatch: number;
++  exactMatchRate: number;
++
++  fieldAccuracy: Record<DecisionField, number>;
++
++  /** Expected urgent, predicted normal. The error that costs a customer. */
++  missedUrgent: number;
++  /** Expected normal, predicted urgent. Wakes on-call for nothing. */
++  falseAlarm: number;
++  urgentRecall: number | null;
++  urgentPrecision: number | null;
++
++  missedReview: number;
++  extraReview: number;
++  /** Share of all mail put in front of a human. High = no automation value. */
++  reviewRate: number;
++  reviewRecall: number | null;
++  reviewPrecision: number | null;
++
++  wrongCategory: number;
++  categoryConfusion: CategoryConfusion;
++
++  /** Cost-weighted total. Lower is better. The number to optimise. */
++  riskScore: number;
++
++  /** Cases whose prediction changed between repeats — unreliable, not averaged away. */
++  unstable: string[];
++
++  latencyMsP50: number;
++  latencyMsMax: number;
++};
++
++function emptyConfusion(): CategoryConfusion {
++  const rows = {} as CategoryConfusion;
++  for (const expected of CATEGORIES) {
++    const row = {} as Record<Category, number>;
++    for (const predicted of CATEGORIES) row[predicted] = 0;
++    rows[expected] = row;
++  }
++  return rows;
++}
++
++function ratio(numerator: number, denominator: number): number | null {
++  return denominator === 0 ? null : numerator / denominator;
++}
++
++function percentile(sorted: readonly number[], p: number): number {
++  if (sorted.length === 0) return 0;
++  const index = Math.min(sorted.length - 1, Math.floor((sorted.length - 1) * p));
++  return sorted[index] ?? 0;
++}
++
++export function score(outcomes: readonly CaseOutcome[]): Metrics {
++  const scored = outcomes.filter(
++    (o): o is CaseOutcome & { predicted: Decision } => o.predicted !== null,
++  );
++
++  const fieldCorrect: Record<DecisionField, number> = {
++    category: 0,
++    priority: 0,
++    humanReview: 0,
++  };
++  const confusion = emptyConfusion();
++
++  let exactMatch = 0;
++  let missedUrgent = 0;
++  let falseAlarm = 0;
++  let expectedUrgent = 0;
++  let predictedUrgent = 0;
++  let correctUrgent = 0;
++  let missedReview = 0;
++  let extraReview = 0;
++  let expectedReview = 0;
++  let predictedReview = 0;
++  let correctReview = 0;
++  let wrongCategory = 0;
++
++  for (const o of scored) {
++    const { expected, predicted } = o;
++
++    for (const field of DECISION_FIELDS) {
++      if (expected[field] === predicted[field]) fieldCorrect[field] += 1;
++    }
++    if (DECISION_FIELDS.every((f) => expected[f] === predicted[f])) exactMatch += 1;
++
++    confusion[expected.category][predicted.category] += 1;
++    if (expected.category !== predicted.category) wrongCategory += 1;
++
++    if (expected.priority === "urgent") expectedUrgent += 1;
++    if (predicted.priority === "urgent") predictedUrgent += 1;
++    if (expected.priority === "urgent" && predicted.priority === "urgent") correctUrgent += 1;
++    if (expected.priority === "urgent" && predicted.priority === "normal") missedUrgent += 1;
++    if (expected.priority === "normal" && predicted.priority === "urgent") falseAlarm += 1;
++
++    if (expected.humanReview) expectedReview += 1;
++    if (predicted.humanReview) predictedReview += 1;
++    if (expected.humanReview && predicted.humanReview) correctReview += 1;
++    if (expected.humanReview && !predicted.humanReview) missedReview += 1;
++    if (!expected.humanReview && predicted.humanReview) extraReview += 1;
++  }
++
++  // A case is unstable if repeats of the same message disagreed.
++  const byId = new Map<string, Set<string>>();
++  for (const o of scored) {
++    const key = `${o.predicted.category}|${o.predicted.priority}|${o.predicted.humanReview}`;
++    const seen = byId.get(o.id) ?? new Set<string>();
++    seen.add(key);
++    byId.set(o.id, seen);
++  }
++  const unstable = [...byId.entries()].filter(([, v]) => v.size > 1).map(([id]) => id);
++
++  const n = scored.length || 1;
++  const latencies = outcomes.map((o) => o.latencyMs).sort((a, b) => a - b);
++
++  return {
++    cases: outcomes.length,
++    scored: scored.length,
++    errors: outcomes.length - scored.length,
++
++    exactMatch,
++    exactMatchRate: exactMatch / n,
++
++    fieldAccuracy: {
++      category: fieldCorrect.category / n,
++      priority: fieldCorrect.priority / n,
++      humanReview: fieldCorrect.humanReview / n,
++    },
++
++    missedUrgent,
++    falseAlarm,
++    urgentRecall: ratio(correctUrgent, expectedUrgent),
++    urgentPrecision: ratio(correctUrgent, predictedUrgent),
++
++    missedReview,
++    extraReview,
++    reviewRate: predictedReview / n,
++    reviewRecall: ratio(correctReview, expectedReview),
++    reviewPrecision: ratio(correctReview, predictedReview),
++
++    wrongCategory,
++    categoryConfusion: confusion,
++
++    riskScore:
++      COST.missedUrgent * missedUrgent +
++      COST.missedReview * missedReview +
++      COST.falseAlarm * falseAlarm +
++      COST.wrongCategory * wrongCategory +
++      COST.extraReview * extraReview,
++
++    unstable,
++
++    latencyMsP50: percentile(latencies, 0.5),
++    latencyMsMax: latencies.length > 0 ? (latencies[latencies.length - 1] ?? 0) : 0,
++  };
++}
++
++const pct = (v: number): string => `${(v * 100).toFixed(0)}%`;
++const optPct = (v: number | null): string => (v === null ? "n/a" : pct(v));
++
++export function formatReport(m: Metrics): string {
++  const lines: string[] = [];
++
++  lines.push("");
++  lines.push("── Decision quality ──────────────────────────────────");
++  lines.push(
++    `  exact match (all 3 fields)   ${m.exactMatch}/${m.scored}  ${pct(m.exactMatchRate)}`,
++  );
++  lines.push(
++    `  per field                    category ${pct(m.fieldAccuracy.category)}   ` +
++      `priority ${pct(m.fieldAccuracy.priority)}   humanReview ${pct(m.fieldAccuracy.humanReview)}`,
++  );
++
++  lines.push("");
++  lines.push("── Escalation (the expensive axis) ───────────────────");
++  lines.push(
++    `  MISSED URGENT                ${m.missedUrgent}   (customer waits; cost ${COST.missedUrgent} each)`,
++  );
++  lines.push(`  false alarms                 ${m.falseAlarm}   (on-call woken for nothing)`);
++  lines.push(
++    `  urgent recall / precision    ${optPct(m.urgentRecall)} / ${optPct(m.urgentPrecision)}`,
++  );
++
++  lines.push("");
++  lines.push("── Human review (the automation-value axis) ──────────");
++  lines.push(
++    `  review rate                  ${pct(m.reviewRate)}   (share of all mail sent to a human)`,
++  );
++  lines.push(`  missed / unnecessary         ${m.missedReview} / ${m.extraReview}`);
++  lines.push(
++    `  review recall / precision    ${optPct(m.reviewRecall)} / ${optPct(m.reviewPrecision)}`,
++  );
++
++  const misroutes = CATEGORIES.flatMap((expected) =>
++    CATEGORIES.filter((p) => p !== expected && m.categoryConfusion[expected][p] > 0).map(
++      (p) => `${expected}→${p} ×${m.categoryConfusion[expected][p]}`,
++    ),
++  );
++  lines.push("");
++  lines.push("── Routing ───────────────────────────────────────────");
++  lines.push(
++    `  wrong category               ${m.wrongCategory}` +
++      (misroutes.length > 0 ? `   (${misroutes.join(", ")})` : ""),
++  );
++
++  lines.push("");
++  lines.push("── Health ────────────────────────────────────────────");
++  lines.push(`  api errors                   ${m.errors}`);
++  lines.push(`  unstable across repeats      ${m.unstable.length > 0 ? m.unstable.join(", ") : "none"}`);
++  lines.push(`  latency p50 / max            ${m.latencyMsP50}ms / ${m.latencyMsMax}ms`);
++
++  lines.push("");
++  lines.push(`  RISK SCORE (lower better)    ${m.riskScore}`);
++  lines.push("");
++
++  return lines.join("\n");
++}
++
++const delta = (now: number, before: number, lowerIsBetter: boolean): string => {
++  const d = now - before;
++  if (d === 0) return `unchanged (${now})`;
++  const better = lowerIsBetter ? d < 0 : d > 0;
++  const arrow = d > 0 ? `+${d}` : `${d}`;
++  return `${before} → ${now}  ${arrow} ${better ? "✅" : "🔴"}`;
++};
++
++export function formatComparison(now: Metrics, before: Metrics, baselineTag: string): string {
++  return [
++    "",
++    `── vs baseline "${baselineTag}" ───────────────────────────`,
++    `  exact match                  ${delta(now.exactMatch, before.exactMatch, false)}`,
++    `  MISSED URGENT                ${delta(now.missedUrgent, before.missedUrgent, true)}`,
++    `  false alarms                 ${delta(now.falseAlarm, before.falseAlarm, true)}`,
++    `  wrong category               ${delta(now.wrongCategory, before.wrongCategory, true)}`,
++    `  review rate                  ${pct(before.reviewRate)} → ${pct(now.reviewRate)}`,
++    `  RISK SCORE                   ${delta(now.riskScore, before.riskScore, true)}`,
++    "",
++  ].join("\n");
++}
+diff --git a/src/policy.ts b/src/policy.ts
+--- a/src/policy.ts	1970-01-01 01:00:00
++++ b/src/policy.ts	2026-09-14 10:01:41
+@@ -0,0 +1,40 @@
++import type { Classification, Decision } from "./schema";
++
++/**
++ * Business escalation policy, as code.
++ *
++ * The model reports what it can observe (`impact`, `ambiguous`); this decides
++ * what the company does about it. Keeping the threshold here rather than in the
++ * prompt means it is reviewable, testable, diffable, and changeable by someone
++ * who does not want to rewrite a prompt to move a threshold.
++ *
++ * CRITICAL — this layer is escalate-only. It may raise normal→urgent and
++ * false→true; it can never lower either. That directionality is the exact
++ * inverse of the bug it replaces (the old `EXPLICIT_URGENCY` regex in
++ * classify.ts *downgraded* priority unless a keyword appeared, which traded the
++ * cheap error for the expensive one). One-directional guardrails are safe here
++ * precisely because the cost asymmetry is one-directional.
++ */
++export function applyPolicy(c: Classification): Decision {
++  // Production halted or a safety risk is urgent on its own terms, whether or
++  // not the customer thought to say "dringend".
++  const impactIsUrgent = c.impact === "stopped" || c.impact === "safety";
++
++  // A machine that misbehaves without stopping is urgent only when the customer
++  // signals they need speed. Commercial/admin mail (impact "none") is never
++  // urgent no matter how it is worded — that is what makes the DRINGEND invoice
++  // chase in c12 stay `normal`.
++  const degradedAndPressing = c.impact === "degraded" && c.customerSignalsUrgency;
++
++  const priority: Decision["priority"] =
++    c.priority === "urgent" || impactIsUrgent || degradedAndPressing ? "urgent" : "normal";
++
++  // Send to a human when someone could get hurt, or when we are escalating on
++  // evidence we are not confident about. Gating the ambiguity arm on urgency is
++  // what keeps the review rate low: a vague but harmless message (c11's
++  // hydraulic noise) is handled automatically.
++  const humanReview =
++    c.humanReview || c.impact === "safety" || (priority === "urgent" && c.ambiguous);
++
++  return { category: c.category, priority, humanReview };
++}
+diff --git a/src/run.ts b/src/run.ts
+--- a/src/run.ts	2026-09-14 10:01:33
++++ b/src/run.ts	2026-09-14 10:01:41
+@@ -1,35 +1,254 @@
+ import "dotenv/config";
+-import { readFileSync } from "node:fs";
++import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
+ import { classify } from "./classify";
+-import type { Classification } from "./schema";
++import { loadCases, type TriageCase } from "./cases";
++import { applyPolicy } from "./policy";
++import { toDecision, type Decision, DECISION_FIELDS } from "./schema";
++import { formatComparison, formatReport, score, type CaseOutcome, type Metrics } from "./metrics";
+ 
+-type Case = { id: string; message: string; expected: Classification };
++/** A mistake by whoever invoked the CLI — report it plainly, without a stack trace. */
++class UsageError extends Error {}
+ 
+-const cases: Case[] = JSON.parse(readFileSync("cases.json", "utf-8"));
+-const fields = ["category", "priority", "humanReview"] as const;
++type Options = {
++  tag: string | null;
++  repeats: number;
++  concurrency: number;
++  policy: boolean;
++  baseline: string;
++  gate: boolean;
++};
+ 
+-async function main() {
+-  let correct = 0;
+-  let total = 0;
++function parseArgs(argv: readonly string[]): Options {
++  const opts: Options = {
++    tag: null,
++    repeats: 1,
++    concurrency: 5,
++    policy: true,
++    baseline: "evals/baseline.json",
++    gate: true,
++  };
+ 
+-  for (const c of cases) {
+-    const result = await classify(c.message);
+-    const marks = fields.map((f) => {
+-      total++;
+-      if (result[f] === c.expected[f]) {
+-        correct++;
+-        return `${f} ✓`;
+-      }
+-      return `${f} ✗ (${result[f]}, expected ${c.expected[f]})`;
+-    });
+-    console.log(`${c.id}  ${marks.join("   ")}`);
+-    console.log(`     "${c.message.slice(0, 80)}${c.message.length > 80 ? "…" : ""}"\n`);
++  for (let i = 0; i < argv.length; i++) {
++    const arg = argv[i];
++    const next = (): string => {
++      const v = argv[i + 1];
++      if (v === undefined) throw new UsageError(`${arg} requires a value`);
++      i++;
++      return v;
++    };
++    switch (arg) {
++      case "--tag":
++        opts.tag = next();
++        break;
++      case "--repeats":
++        opts.repeats = Number.parseInt(next(), 10);
++        break;
++      case "--concurrency":
++        opts.concurrency = Number.parseInt(next(), 10);
++        break;
++      case "--baseline":
++        opts.baseline = next();
++        break;
++      case "--no-policy":
++        opts.policy = false;
++        break;
++      case "--no-gate":
++        opts.gate = false;
++        break;
++      default:
++        throw new UsageError(
++          `unknown argument: ${arg}\n` +
++            "usage: npm run eval -- [--tag <name>] [--repeats <n>] [--concurrency <n>] " +
++            "[--baseline <path>] [--no-policy] [--no-gate]",
++        );
++    }
+   }
+ 
+-  console.log(`Overall: ${correct}/${total} fields correct (${Math.round((correct / total) * 100)}%)`);
++  if (!Number.isFinite(opts.repeats) || opts.repeats < 1) {
++    throw new UsageError("--repeats must be an integer >= 1");
++  }
++  if (!Number.isFinite(opts.concurrency) || opts.concurrency < 1) {
++    throw new UsageError("--concurrency must be an integer >= 1");
++  }
++  return opts;
+ }
+ 
+-main().catch((err) => {
+-  console.error(err);
++/** Bounded-concurrency map. ~12 lines; not worth a dependency. */
++async function mapWithLimit<T, R>(
++  items: readonly T[],
++  limit: number,
++  fn: (item: T, index: number) => Promise<R>,
++): Promise<R[]> {
++  const results = new Array<R>(items.length);
++  let cursor = 0;
++  const workers = Array.from({ length: Math.min(limit, items.length) }, async () => {
++    while (cursor < items.length) {
++      const index = cursor++;
++      const item = items[index];
++      if (item === undefined) break;
++      results[index] = await fn(item, index);
++    }
++  });
++  await Promise.all(workers);
++  return results;
++}
++
++async function runOne(
++  testCase: TriageCase,
++  repeat: number,
++  usePolicy: boolean,
++): Promise<CaseOutcome> {
++  const startedAt = Date.now();
++  try {
++    const classification = await classify(testCase.message);
++    const rawPredicted = toDecision(classification);
++    return {
++      id: testCase.id,
++      repeat,
++      expected: testCase.expected,
++      predicted: usePolicy ? applyPolicy(classification) : rawPredicted,
++      rawPredicted,
++      evidence: {
++        reasoning: classification.reasoning,
++        impact: classification.impact,
++        customerSignalsUrgency: classification.customerSignalsUrgency,
++        ambiguous: classification.ambiguous,
++      },
++      error: null,
++      latencyMs: Date.now() - startedAt,
++    };
++  } catch (err) {
++    return {
++      id: testCase.id,
++      repeat,
++      expected: testCase.expected,
++      predicted: null,
++      rawPredicted: null,
++      evidence: null,
++      error: err instanceof Error ? err.message : String(err),
++      latencyMs: Date.now() - startedAt,
++    };
++  }
++}
++
++function formatCaseLine(o: CaseOutcome): string {
++  if (o.predicted === null) {
++    return `  ${o.id}  ⚠️  API error: ${o.error ?? "unknown"}`;
++  }
++  const predicted: Decision = o.predicted;
++  const marks = DECISION_FIELDS.map((f) =>
++    o.expected[f] === predicted[f]
++      ? `${f} ✓`
++      : `${f} ✗ (got ${String(predicted[f])}, want ${String(o.expected[f])})`,
++  );
++  const ok = DECISION_FIELDS.every((f) => o.expected[f] === predicted[f]);
++  const escalated =
++    o.rawPredicted !== null &&
++    (o.rawPredicted.priority !== predicted.priority ||
++      o.rawPredicted.humanReview !== predicted.humanReview)
++      ? "  [policy escalated]"
++      : "";
++  const impact = o.evidence !== null ? `  impact=${o.evidence.impact}` : "";
++  return `  ${o.id}  ${ok ? "✓" : "✗"}  ${marks.join("   ")}${impact}${escalated}`;
++}
++
++function readBaseline(path: string): Metrics | null {
++  if (!existsSync(path)) return null;
++  try {
++    const parsed: unknown = JSON.parse(readFileSync(path, "utf-8"));
++    if (typeof parsed === "object" && parsed !== null && "metrics" in parsed) {
++      return (parsed as { metrics: Metrics }).metrics;
++    }
++    return null;
++  } catch {
++    return null;
++  }
++}
++
++async function main(): Promise<void> {
++  const opts = parseArgs(process.argv.slice(2));
++  let cases: readonly TriageCase[];
++  try {
++    cases = loadCases();
++  } catch (err) {
++    throw new UsageError(err instanceof Error ? err.message : String(err));
++  }
++
++  const jobs = cases.flatMap((c) =>
++    Array.from({ length: opts.repeats }, (_, repeat) => ({ testCase: c, repeat })),
++  );
++
++  console.log(
++    `Running ${cases.length} cases × ${opts.repeats} repeat(s), ` +
++      `policy layer ${opts.policy ? "ON" : "OFF"}, concurrency ${opts.concurrency}\n`,
++  );
++
++  const outcomes = await mapWithLimit(jobs, opts.concurrency, (job) =>
++    runOne(job.testCase, job.repeat, opts.policy),
++  );
++
++  for (const o of outcomes) {
++    if (o.repeat === 0) console.log(formatCaseLine(o));
++  }
++
++  const metrics = score(outcomes);
++  console.log(formatReport(metrics));
++
++  // Show exactly which messages would have left a customer waiting.
++  const missed = outcomes.filter(
++    (o) => o.predicted !== null && o.expected.priority === "urgent" && o.predicted.priority === "normal",
++  );
++  if (missed.length > 0) {
++    console.log("  Missed escalations:");
++    for (const o of missed) {
++      console.log(`    ${o.id}  impact=${o.evidence?.impact ?? "?"}  "${o.evidence?.reasoning ?? ""}"`);
++    }
++    console.log("");
++  }
++
++  const baseline = readBaseline(opts.baseline);
++  if (baseline !== null && opts.tag !== "baseline") {
++    console.log(formatComparison(metrics, baseline, opts.baseline));
++  }
++
++  if (opts.tag !== null) {
++    mkdirSync("evals", { recursive: true });
++    const path = `evals/${opts.tag}.json`;
++    writeFileSync(
++      path,
++      JSON.stringify(
++        {
++          tag: opts.tag,
++          createdAt: new Date().toISOString(),
++          model: process.env.MODEL || "default",
++          provider: process.env.AI_PROVIDER || "anthropic",
++          options: { repeats: opts.repeats, policy: opts.policy },
++          metrics,
++          outcomes,
++        },
++        null,
++        2,
++      ),
++      "utf-8",
++    );
++    console.log(`  Saved → ${path}\n`);
++  }
++
++  // A shipping gate, not a report. Missing an escalation is the one failure the
++  // business said it cannot absorb, so it fails the build.
++  if (opts.gate && (metrics.missedUrgent > 0 || metrics.errors > 0)) {
++    console.error(
++      `  GATE FAILED: ${metrics.missedUrgent} missed escalation(s), ${metrics.errors} API error(s).\n`,
++    );
++    process.exit(1);
++  }
++}
++
++main().catch((err: unknown) => {
++  if (err instanceof UsageError) {
++    console.error(`\n  ${err.message}\n`);
++  } else {
++    console.error(err);
++  }
+   process.exit(1);
+ });
+diff --git a/src/schema.ts b/src/schema.ts
+--- a/src/schema.ts	2026-09-14 10:01:33
++++ b/src/schema.ts	2026-09-14 10:01:41
+@@ -1,9 +1,75 @@
+ import { z } from "zod";
+ 
+-export const ClassificationSchema = z.object({
++/**
++ * The three decisions the business consumes. This is the contract with the
++ * downstream routing system and the only thing the eval scores.
++ */
++export const DecisionSchema = z.object({
+   category: z.enum(["technical", "billing", "delivery", "other"]),
+   priority: z.enum(["normal", "urgent"]),
+   humanReview: z.boolean(),
+ });
+ 
++export type Decision = z.infer<typeof DecisionSchema>;
++
++export const DECISION_FIELDS = ["category", "priority", "humanReview"] as const;
++export type DecisionField = (typeof DECISION_FIELDS)[number];
++
++export type Category = Decision["category"];
++export type Priority = Decision["priority"];
++
++export const CATEGORIES = ["technical", "billing", "delivery", "other"] as const;
++
++/**
++ * What the model returns.
++ *
++ * Field order is deliberate and load-bearing: the model emits these keys in
++ * order, so `reasoning` and the observable evidence are generated *before* the
++ * decisions that depend on them. It also gives us an audit trail — when a
++ * production message is escalated at 3am, `reasoning` + `impact` explain why.
++ *
++ * The evidence fields exist so the model reports *what it can see* while
++ * `policy.ts` applies *what the business has decided*. Escalation thresholds
++ * are company policy, not something a classifier should be asked to memorise.
++ */
++export const ClassificationSchema = z.object({
++  reasoning: z
++    .string()
++    .max(400)
++    .describe(
++      "One or two sentences in English: what the customer wants and what is happening on their production floor.",
++    ),
++  impact: z
++    .enum(["none", "degraded", "stopped", "safety"])
++    .describe(
++      "Observable operational impact. none = no machine affected (commercial/admin request). " +
++        "degraded = a machine runs but misbehaves. stopped = production is halted, for ANY reason " +
++        "including a missing spare part. safety = risk to people, regardless of whether production runs.",
++    ),
++  customerSignalsUrgency: z
++    .boolean()
++    .describe(
++      "True if the customer explicitly asks for speed (dringend, ASAP, a deadline, 'call me today'). " +
++        "This is a hint only, never sufficient on its own.",
++    ),
++  ambiguous: z
++    .boolean()
++    .describe(
++      "True if the message is too vague to act on confidently: unclear symptoms, unclear scope, " +
++        "or the customer is asking whether it is safe to continue.",
++    ),
++  ...DecisionSchema.shape,
++});
++
++/** Full model output. Name kept for backwards compatibility with the original code. */
+ export type Classification = z.infer<typeof ClassificationSchema>;
++
++/** The evidence half of the model output, used for auditing and for `policy.ts`. */
++export type Evidence = Pick<
++  Classification,
++  "reasoning" | "impact" | "customerSignalsUrgency" | "ambiguous"
++>;
++
++export function toDecision(c: Classification): Decision {
++  return { category: c.category, priority: c.priority, humanReview: c.humanReview };
++}
